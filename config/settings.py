@@ -153,13 +153,11 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+CSRF_TRUSTED_ORIGINS = [
+    "https://ai-crm-django-production.up.railway.app",
     "https://ai-crm-django.vercel.app",
-    "https://ai-crm-django-fd40x...-devendra-508s-projects.vercel.app",
+    "https://ai-crm-django-fd40xearn-devendra-508s-projects.vercel.app",
 ]
-
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
