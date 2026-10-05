@@ -156,6 +156,7 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://ai-crm-django.vercel.app",
 ]
 
 CHANNEL_LAYERS = {
