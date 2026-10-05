@@ -189,12 +189,16 @@ Use only the provided CRM data.
 
     except Exception as e:
 
-        print("GEMINI ERROR:", str(e))
+     print("======================================")
+     print("GEMINI ERROR TYPE:", type(e).__name__)
+     print("GEMINI ERROR:", repr(e))
+     print("======================================")
 
-        return Response(
-            {
-                "error": "Failed to generate AI insight",
-                "details": str(e),
-            },
-            status=500,
-        )
+    return Response(
+        {
+            "error": "Failed to generate AI insight",
+            "error_type": type(e).__name__,
+            "details": str(e),
+        },
+        status=500,
+    )
