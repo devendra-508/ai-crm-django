@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://127.0.0.1:8000/api",
+    baseURL: "https://ai-crm-django-production.up.railway.app/api",
 });
 
 // =========================
@@ -64,7 +64,7 @@ api.interceptors.response.use(
 
                 // Get new access token
                 const response = await axios.post(
-                    "http://127.0.0.1:8000/api/auth/refresh/",
+                    "https://ai-crm-django-production.up.railway.app/api/auth/refresh/",
                     {
                         refresh: refreshToken,
                     }
