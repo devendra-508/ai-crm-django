@@ -1,7 +1,4 @@
-import json
-
 from django.conf import settings
-from django.db.models import Sum, F
 
 from google import genai
 
@@ -9,173 +6,39 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from customers.models import Customer
-from products.models import Product
-from purchases.models import Purchase
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def ai_insight(request):
 
-    # =========================
-    # CRM SUMMARY
-    # =========================
-
-    total_customers = Customer.objects.filter(
-        is_active=True
-    ).count()
-
-    total_products = Product.objects.count()
-
-    total_purchases = Purchase.objects.count()
-
-    total_revenue = (
-        Purchase.objects.aggregate(
-            total=Sum("total_amount")
-        )["total"] or 0
-    )
-
-    # =========================
-    # LOW STOCK PRODUCTS
-    # =========================
-
-    low_stock_products = Product.objects.filter(
-        current_stock__lte=F("low_stock_limit")
-    ).values(
-        "name",
-        "product_code",
-        "current_stock",
-        "low_stock_limit",
-    )
-
-    low_stock_data = list(low_stock_products)
-
-    # =========================
-    # PRODUCT-WISE SALES
-    # =========================
-
-    sales_data = (
-        Purchase.objects
-        .values(
-            "product__name",
-            "product__product_code",
-        )
-        .annotate(
-            total_quantity=Sum("quantity")
-        )
-        .order_by("-total_quantity")
-    )
-
-    product_sales_data = list(sales_data)
-
-    # =========================
-    # GEMINI CLIENT
-    # =========================
-
     try:
+
+        # =========================
+        # GEMINI CLIENT
+        # =========================
 
         client = genai.Client(
             api_key=settings.GEMINI_API_KEY
         )
 
         # =========================
-        # AI PROMPT
-        # =========================
-
-        prompt = f"""
-You are an AI business assistant for a CRM application.
-
-Analyze ONLY the CRM data provided below.
-
-CRM SUMMARY:
-
-Total active customers:
-{total_customers}
-
-Total products:
-{total_products}
-
-Total purchases:
-{total_purchases}
-
-Total revenue:
-{total_revenue}
-
-LOW STOCK PRODUCTS:
-
-{low_stock_data}
-
-PRODUCT-WISE SALES:
-
-{product_sales_data}
-
-Generate a concise business analysis.
-
-Do not invent any information.
-Use only the provided CRM data.
-
-Return ONLY valid JSON.
-
-Use exactly this format:
-
-{{
-    "summary": "short business summary",
-    "sales_insights": "sales analysis",
-    "inventory_insights": "inventory analysis",
-    "recommendations": [
-        "recommendation 1",
-        "recommendation 2"
-    ]
-}}
-
-Do not use markdown.
-Do not wrap the JSON in ```json.
-"""
-
-        # =========================
-        # GEMINI REQUEST
+        # BASIC GEMINI TEST
         # =========================
 
         response = client.models.generate_content(
             model="gemini-3.6-flash",
-            contents=prompt,
-            config={
-                "response_mime_type": "application/json",
-            }
+            contents="Say hello in one sentence."
         )
 
-        # =========================
-        # PARSE AI RESPONSE
-        # =========================
-
-        ai_data = json.loads(response.text)
+        print("======================================")
+        print("GEMINI RESPONSE:", response.text)
+        print("======================================")
 
         return Response(
             {
-                "message": "AI insights generated successfully",
-
-                "crm_data": {
-                    "total_customers": total_customers,
-                    "total_products": total_products,
-                    "total_purchases": total_purchases,
-                    "total_revenue": total_revenue,
-                    "low_stock_products": low_stock_data,
-                    "product_sales": product_sales_data,
-                },
-
-                "ai_insights": ai_data,
+                "message": "Gemini test successful",
+                "response": response.text,
             }
-        )
-
-    except json.JSONDecodeError:
-
-        return Response(
-            {
-                "error": "Gemini returned an invalid JSON response",
-                "raw_response": response.text,
-            },
-            status=500,
         )
 
     except Exception as e:
