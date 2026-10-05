@@ -114,6 +114,23 @@ Generate a concise business analysis.
 
 Do not invent any information.
 Use only the provided CRM data.
+
+Return ONLY valid JSON.
+
+Use exactly this format:
+
+{{
+    "summary": "short business summary",
+    "sales_insights": "sales analysis",
+    "inventory_insights": "inventory analysis",
+    "recommendations": [
+        "recommendation 1",
+        "recommendation 2"
+    ]
+}}
+
+Do not use markdown.
+Do not wrap the JSON in ```json.
 """
 
         # =========================
@@ -125,32 +142,6 @@ Use only the provided CRM data.
             contents=prompt,
             config={
                 "response_mime_type": "application/json",
-                "response_json_schema": {
-                    "type": "object",
-                    "properties": {
-                        "summary": {
-                            "type": "string"
-                        },
-                        "sales_insights": {
-                            "type": "string"
-                        },
-                        "inventory_insights": {
-                            "type": "string"
-                        },
-                        "recommendations": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "required": [
-                        "summary",
-                        "sales_insights",
-                        "inventory_insights",
-                        "recommendations"
-                    ]
-                }
             }
         )
 
@@ -189,16 +180,16 @@ Use only the provided CRM data.
 
     except Exception as e:
 
-     print("======================================")
-     print("GEMINI ERROR TYPE:", type(e).__name__)
-     print("GEMINI ERROR:", repr(e))
-     print("======================================")
+        print("======================================")
+        print("GEMINI ERROR TYPE:", type(e).__name__)
+        print("GEMINI ERROR:", repr(e))
+        print("======================================")
 
-    return Response(
-        {
-            "error": "Failed to generate AI insight",
-            "error_type": type(e).__name__,
-            "details": str(e),
-        },
-        status=500,
-    )
+        return Response(
+            {
+                "error": "Failed to generate AI insight",
+                "error_type": type(e).__name__,
+                "details": str(e),
+            },
+            status=500,
+        )
