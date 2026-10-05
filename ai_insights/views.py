@@ -4,7 +4,6 @@ from django.conf import settings
 from django.db.models import Sum, F
 
 from google import genai
-from google.genai import types
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -124,9 +123,9 @@ Use only the provided CRM data.
         response = client.models.generate_content(
             model="gemini-3.6-flash",
             contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema={
+            config={
+                "response_mime_type": "application/json",
+                "response_json_schema": {
                     "type": "object",
                     "properties": {
                         "summary": {
@@ -152,7 +151,7 @@ Use only the provided CRM data.
                         "recommendations"
                     ]
                 }
-            )
+            }
         )
 
         # =========================
@@ -176,6 +175,16 @@ Use only the provided CRM data.
 
                 "ai_insights": ai_data,
             }
+        )
+
+    except json.JSONDecodeError:
+
+        return Response(
+            {
+                "error": "Gemini returned an invalid JSON response",
+                "raw_response": response.text,
+            },
+            status=500,
         )
 
     except Exception as e:
