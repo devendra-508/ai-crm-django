@@ -1,0 +1,59 @@
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: ai-crm-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    ports:
+      - "3307:3306"
+    volumes:
+      - ai-crm-mysql-data:/var/lib/mysql
+    networks:
+      - ai-crm-network
+
+  redis:
+    image: redis:7
+    container_name: ai-crm-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - ai-crm-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-crm-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - "8000:8000"
+    networks:
+      - ai-crm-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ai-crm-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    networks:
+      - ai-crm-network
+
+volumes:
+  ai-crm-mysql-data:
+
+networks:
+  ai-crm-network:
