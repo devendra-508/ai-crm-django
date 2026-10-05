@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db.models import Sum, F
 
 from google import genai
+from google.genai import types
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -73,18 +74,20 @@ def ai_insight(request):
     # GEMINI CLIENT
     # =========================
 
-    client = genai.Client(
-        api_key=settings.GEMINI_API_KEY
-    )
+    try:
 
-    # =========================
-    # AI PROMPT
-    # =========================
+        client = genai.Client(
+            api_key=settings.GEMINI_API_KEY
+        )
 
-    prompt = f"""
+        # =========================
+        # AI PROMPT
+        # =========================
+
+        prompt = f"""
 You are an AI business assistant for a CRM application.
 
-Analyze the following CRM data.
+Analyze ONLY the CRM data provided below.
 
 CRM SUMMARY:
 
@@ -108,42 +111,53 @@ PRODUCT-WISE SALES:
 
 {product_sales_data}
 
-Return your response as valid JSON.
+Generate a concise business analysis.
 
-Use exactly this structure:
-
-{{
-    "summary": "Short business overview",
-    "sales_insights": "Sales performance analysis",
-    "inventory_insights": "Inventory and low-stock analysis",
-    "recommendations": [
-        "Recommendation 1",
-        "Recommendation 2",
-        "Recommendation 3"
-    ]
-}}
-
-Important rules:
-
-- Return ONLY valid JSON.
-- Do not use markdown.
-- Do not add ```json.
-- Do not invent data.
-- Use only the provided CRM data.
-- If there is insufficient data, clearly mention it.
-- Keep the response concise.
+Do not invent any information.
+Use only the provided CRM data.
 """
 
-    # =========================
-    # GEMINI REQUEST
-    # =========================
-
-    try:
+        # =========================
+        # GEMINI REQUEST
+        # =========================
 
         response = client.models.generate_content(
             model="gemini-3.6-flash",
             contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema={
+                    "type": "object",
+                    "properties": {
+                        "summary": {
+                            "type": "string"
+                        },
+                        "sales_insights": {
+                            "type": "string"
+                        },
+                        "inventory_insights": {
+                            "type": "string"
+                        },
+                        "recommendations": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [
+                        "summary",
+                        "sales_insights",
+                        "inventory_insights",
+                        "recommendations"
+                    ]
+                }
+            )
         )
+
+        # =========================
+        # PARSE AI RESPONSE
+        # =========================
 
         ai_data = json.loads(response.text)
 
@@ -164,17 +178,9 @@ Important rules:
             }
         )
 
-    except json.JSONDecodeError:
-
-        return Response(
-            {
-                "error": "Gemini returned an invalid JSON response",
-                "raw_response": response.text,
-            },
-            status=500,
-        )
-
     except Exception as e:
+
+        print("GEMINI ERROR:", str(e))
 
         return Response(
             {
