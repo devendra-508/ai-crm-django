@@ -50,6 +50,10 @@ class Product(models.Model):
         default=10
     )
 
+    is_active = models.BooleanField(
+    default=True
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )

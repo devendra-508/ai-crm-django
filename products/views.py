@@ -89,14 +89,15 @@ def product_detail(request, pk):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # DELETE → Delete product
+   # DELETE → Deactivate product
     if request.method == "DELETE":
-        product.delete()
+     product.is_active = False
+     product.save(update_fields=["is_active"])
 
-        return Response(
-            {"message": "Product deleted successfully"},
-            status=status.HTTP_204_NO_CONTENT
-        )
+     return Response(
+        {"message": "Product deactivated successfully"},
+        status=status.HTTP_200_OK
+     )
 
 
 @api_view(["GET"])

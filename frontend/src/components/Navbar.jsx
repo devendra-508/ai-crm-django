@@ -62,11 +62,11 @@ function Navbar({ user }) {
       return;
     }
 
-    const ws = new WebSocket(
-      `ws://127.0.0.1:8000/ws/notifications/?token=${token}`,
-    );
+    const WS_URL = import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8000";
 
-    socketRef.current = ws;
+    const socket = new WebSocket(`${WS_URL}/ws/notifications/?token=${token}`);
+
+   socketRef.current = socket;
 
     ws.onopen = () => {
       console.log("WebSocket connected");
