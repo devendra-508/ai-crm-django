@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
   Bell,
   Search,
@@ -19,6 +20,7 @@ function Navbar({ user }) {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -62,45 +64,61 @@ function Navbar({ user }) {
       return;
     }
 
-    const WS_URL = import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8000";
+    const WS_URL =
+      import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8000";
 
-    const socket = new WebSocket(`${WS_URL}/ws/notifications/?token=${token}`);
+    const socket = new WebSocket(
+      `${WS_URL}/ws/notifications/?token=${token}`
+    );
 
-   socketRef.current = socket;
+    socketRef.current = socket;
 
-    ws.onopen = () => {
+    // WebSocket connected
+    socket.onopen = () => {
       console.log("WebSocket connected");
 
       setWsConnected(true);
     };
 
-    ws.onmessage = (event) => {
+    // Receive notification
+    socket.onmessage = (event) => {
       try {
         const notification = JSON.parse(event.data);
 
-        setNotifications((previous) => [notification, ...previous]);
+        setNotifications((previous) => [
+          notification,
+          ...previous,
+        ]);
 
-        if ("Notification" in window && Notification.permission === "granted") {
+        if (
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
           new Notification(notification.title, {
             body: notification.message,
           });
         }
       } catch (error) {
-        console.error("Invalid WebSocket notification:", error);
+        console.error(
+          "Invalid WebSocket notification:",
+          error
+        );
       }
     };
 
-    ws.onerror = (error) => {
+    // WebSocket error
+    socket.onerror = (error) => {
       console.error("WebSocket error:", error);
 
       setWsConnected(false);
     };
 
-    ws.onclose = () => {
+    // WebSocket disconnected
+    socket.onclose = () => {
       console.log("WebSocket disconnected");
 
       // Ignore old/stale socket
-      if (socketRef.current !== ws) {
+      if (socketRef.current !== socket) {
         return;
       }
 
@@ -117,6 +135,7 @@ function Navbar({ user }) {
       }, 5000);
     };
   };
+
   // ==========================================
   // Initialize notifications + WebSocket
   // ==========================================
@@ -127,7 +146,10 @@ function Navbar({ user }) {
     connectWebSocket();
 
     // Ask browser notification permission
-    if ("Notification" in window && Notification.permission === "default") {
+    if (
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
       Notification.requestPermission();
     }
 
@@ -158,10 +180,16 @@ function Navbar({ user }) {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
     };
   }, []);
 
@@ -180,11 +208,14 @@ function Navbar({ user }) {
                 ...notification,
                 is_read: true,
               }
-            : notification,
-        ),
+            : notification
+        )
       );
     } catch (error) {
-      console.error("Failed to mark notification as read:", error);
+      console.error(
+        "Failed to mark notification as read:",
+        error
+      );
     }
   };
 
@@ -197,10 +228,15 @@ function Navbar({ user }) {
       await api.delete(`/notifications/${id}/`);
 
       setNotifications((previous) =>
-        previous.filter((notification) => notification.id !== id),
+        previous.filter(
+          (notification) => notification.id !== id
+        )
       );
     } catch (error) {
-      console.error("Failed to delete notification:", error);
+      console.error(
+        "Failed to delete notification:",
+        error
+      );
     }
   };
 
@@ -211,28 +247,31 @@ function Navbar({ user }) {
   const markAllAsRead = async () => {
     try {
       const unreadNotifications = notifications.filter(
-        (notification) => !notification.is_read,
+        (notification) => !notification.is_read
       );
 
       await Promise.all(
         unreadNotifications.map((notification) =>
-          api.patch(`/notifications/${notification.id}/read/`),
-        ),
+          api.patch(`/notifications/${notification.id}/read/`)
+        )
       );
 
       setNotifications((previous) =>
         previous.map((notification) => ({
           ...notification,
           is_read: true,
-        })),
+        }))
       );
     } catch (error) {
-      console.error("Failed to mark all notifications as read:", error);
+      console.error(
+        "Failed to mark all notifications as read:",
+        error
+      );
     }
   };
 
   const unreadCount = notifications.filter(
-    (notification) => !notification.is_read,
+    (notification) => !notification.is_read
   ).length;
 
   // ==========================================
@@ -250,7 +289,9 @@ function Navbar({ user }) {
     try {
       setSearchLoading(true);
 
-      const response = await api.get(`/search/?q=${encodeURIComponent(value)}`);
+      const response = await api.get(
+        `/search/?q=${encodeURIComponent(value)}`
+      );
 
       setSearchResults(response.data);
     } catch (error) {
@@ -265,23 +306,30 @@ function Navbar({ user }) {
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
       {/* ================================
-                Search
-            ================================= */}
+          Search
+      ================================= */}
 
       <div className="relative w-96">
         <div className="flex items-center gap-3">
-          <Search size={19} className="text-slate-400" />
+          <Search
+            size={19}
+            className="text-slate-400"
+          />
 
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) =>
+              handleSearch(e.target.value)
+            }
             placeholder="Search products, customers..."
             className="w-full outline-none text-sm text-slate-700 placeholder:text-slate-400"
           />
 
           {searchLoading && (
-            <span className="text-xs text-slate-400">Searching...</span>
+            <span className="text-xs text-slate-400">
+              Searching...
+            </span>
           )}
         </div>
 
@@ -346,8 +394,8 @@ function Navbar({ user }) {
 
                     <p className="text-xs text-slate-400 mt-1">
                       {customer.phone}
-
-                      {customer.city && ` • ${customer.city}`}
+                      {customer.city &&
+                        ` • ${customer.city}`}
                     </p>
                   </div>
                 ))}
@@ -393,9 +441,14 @@ function Navbar({ user }) {
               searchResults.customers?.length === 0 &&
               searchResults.purchases?.length === 0 && (
                 <div className="px-4 py-8 text-center">
-                  <Search size={24} className="mx-auto text-slate-300 mb-2" />
+                  <Search
+                    size={24}
+                    className="mx-auto text-slate-300 mb-2"
+                  />
 
-                  <p className="text-sm text-slate-500">No results found</p>
+                  <p className="text-sm text-slate-500">
+                    No results found
+                  </p>
 
                   <p className="text-xs text-slate-400 mt-1">
                     Try another search term.
@@ -407,17 +460,24 @@ function Navbar({ user }) {
       </div>
 
       {/* ================================
-                Right Side
-            ================================= */}
+          Right Side
+      ================================= */}
 
       <div className="flex items-center gap-5">
         {/* =================================
-                    Notification
-                ================================= */}
+            Notification
+        ================================= */}
 
-        <div className="relative" ref={notificationRef}>
+        <div
+          className="relative"
+          ref={notificationRef}
+        >
           <button
-            onClick={() => setShowNotifications((previous) => !previous)}
+            onClick={() =>
+              setShowNotifications(
+                (previous) => !previous
+              )
+            }
             className="relative p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
             title="Notifications"
           >
@@ -425,7 +485,9 @@ function Navbar({ user }) {
 
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                {unreadCount > 99 ? "99+" : unreadCount}
+                {unreadCount > 99
+                  ? "99+"
+                  : unreadCount}
               </span>
             )}
           </button>
@@ -450,7 +512,9 @@ function Navbar({ user }) {
                 <div className="flex items-center gap-2">
                   <span
                     className={`flex items-center gap-1 text-[11px] ${
-                      wsConnected ? "text-emerald-600" : "text-slate-400"
+                      wsConnected
+                        ? "text-emerald-600"
+                        : "text-slate-400"
                     }`}
                   >
                     {wsConnected ? (
@@ -483,9 +547,14 @@ function Navbar({ user }) {
               <div className="max-h-105 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="py-12 text-center">
-                    <Bell size={28} className="mx-auto text-slate-300 mb-2" />
+                    <Bell
+                      size={28}
+                      className="mx-auto text-slate-300 mb-2"
+                    />
 
-                    <p className="text-sm text-slate-500">No notifications</p>
+                    <p className="text-sm text-slate-500">
+                      No notifications
+                    </p>
 
                     <p className="text-xs text-slate-400 mt-1">
                       You're all caught up.
@@ -496,7 +565,9 @@ function Navbar({ user }) {
                     <div
                       key={notification.id}
                       className={`px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition ${
-                        !notification.is_read ? "bg-blue-50/40" : ""
+                        !notification.is_read
+                          ? "bg-blue-50/40"
+                          : ""
                       }`}
                     >
                       <div className="flex gap-3">
@@ -532,14 +603,18 @@ function Navbar({ user }) {
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-[10px] text-slate-400">
                               {new Date(
-                                notification.created_at,
+                                notification.created_at
                               ).toLocaleString()}
                             </span>
 
                             <div className="flex items-center gap-1">
                               {!notification.is_read && (
                                 <button
-                                  onClick={() => markAsRead(notification.id)}
+                                  onClick={() =>
+                                    markAsRead(
+                                      notification.id
+                                    )
+                                  }
                                   className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded"
                                   title="Mark as read"
                                 >
@@ -549,7 +624,9 @@ function Navbar({ user }) {
 
                               <button
                                 onClick={() =>
-                                  deleteNotification(notification.id)
+                                  deleteNotification(
+                                    notification.id
+                                  )
                                 }
                                 className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"
                                 title="Delete notification"
@@ -569,18 +646,23 @@ function Navbar({ user }) {
         </div>
 
         {/* =================================
-                    User
-                ================================= */}
+            User
+        ================================= */}
 
         <div className="flex items-center gap-3 border-l border-slate-200 pl-5">
-          <UserCircle size={34} className="text-slate-500" />
+          <UserCircle
+            size={34}
+            className="text-slate-500"
+          />
 
           <div>
             <p className="text-sm font-semibold text-slate-800">
               {user?.username || "Admin"}
             </p>
 
-            <p className="text-xs text-slate-400">Administrator</p>
+            <p className="text-xs text-slate-400">
+              Administrator
+            </p>
           </div>
         </div>
       </div>
