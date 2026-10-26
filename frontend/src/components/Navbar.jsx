@@ -10,11 +10,12 @@ import {
   CheckCheck,
   Wifi,
   WifiOff,
+  Menu,
 } from "lucide-react";
 
 import api from "../api";
 
-function Navbar({ user }) {
+function Navbar({ user, onMenuClick }) {
   const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState([]);
@@ -65,7 +66,10 @@ function Navbar({ user }) {
     }
 
     const WS_URL =
-      import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8000";
+      import.meta.env.VITE_WS_URL ||
+      (import.meta.env.DEV
+        ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`
+        : "wss://ai-crm-django-production.up.railway.app");
 
     const socket = new WebSocket(
       `${WS_URL}/ws/notifications/?token=${token}`
@@ -304,12 +308,21 @@ function Navbar({ user }) {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+    <header className="sticky top-0 z-30 flex h-16 min-w-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 sm:px-6">
       {/* ================================
           Search
       ================================= */}
 
-      <div className="relative w-96">
+      <button
+        type="button"
+        onClick={onMenuClick}
+        aria-label="Open navigation"
+        className="shrink-0 rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden"
+      >
+        <Menu size={21} />
+      </button>
+
+      <div className="relative min-w-0 flex-1 md:max-w-96">
         <div className="flex items-center gap-3">
           <Search
             size={19}
@@ -323,7 +336,7 @@ function Navbar({ user }) {
               handleSearch(e.target.value)
             }
             placeholder="Search products, customers..."
-            className="w-full outline-none text-sm text-slate-700 placeholder:text-slate-400"
+            className="w-full min-w-0 outline-none text-sm text-slate-700 placeholder:text-slate-400"
           />
 
           {searchLoading && (
@@ -463,7 +476,7 @@ function Navbar({ user }) {
           Right Side
       ================================= */}
 
-      <div className="flex items-center gap-5">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-5">
         {/* =================================
             Notification
         ================================= */}
@@ -495,7 +508,7 @@ function Navbar({ user }) {
           {/* Notification Dropdown */}
 
           {showNotifications && (
-            <div className="absolute right-0 top-12 w-95 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+            <div className="absolute right-0 top-12 z-50 w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
               {/* Header */}
 
               <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
@@ -649,13 +662,13 @@ function Navbar({ user }) {
             User
         ================================= */}
 
-        <div className="flex items-center gap-3 border-l border-slate-200 pl-5">
+        <div className="flex items-center gap-2 border-l border-slate-200 pl-2 sm:gap-3 sm:pl-5">
           <UserCircle
             size={34}
             className="text-slate-500"
           />
 
-          <div>
+          <div className="hidden sm:block">
             <p className="text-sm font-semibold text-slate-800">
               {user?.username || "Admin"}
             </p>

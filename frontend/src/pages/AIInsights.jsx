@@ -149,7 +149,7 @@ function AIInsights() {
 
             {/* ================= HEADER ================= */}
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
                 <div>
 
@@ -192,7 +192,7 @@ function AIInsights() {
                         CRM Data Summary
                     </h2>
 
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-5">
 
                         <div className="bg-blue-50 rounded-lg p-4">
                             <p className="text-xs text-blue-600">

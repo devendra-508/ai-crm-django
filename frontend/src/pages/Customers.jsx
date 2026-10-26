@@ -250,7 +250,7 @@ function Customers() {
                 HEADER
             ================================================== */}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Customers</h1>
 
@@ -409,7 +409,7 @@ function Customers() {
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="w-full max-h-[calc(100dvh-2rem)] max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
             {/* =========================
                 MODAL HEADER
             ========================= */}

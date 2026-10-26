@@ -23,6 +23,7 @@ import Reports from "./pages/Reports";
 import AIInsights from "./pages/AIInsights";
 
 function App() {
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
     // =========================
     // LOGIN STATE
     // =========================
@@ -98,7 +99,9 @@ function App() {
                 error.response?.data
                     ?.non_field_errors?.[0] ||
                     error.response?.data?.detail ||
-                    "Invalid username or password"
+                    (error.response
+                        ? "Invalid username or password"
+                        : "Unable to reach the server. Check the API connection and try again.")
             );
         } finally {
             setLoading(false);
@@ -240,9 +243,27 @@ function App() {
                     SIDEBAR
                 ========================= */}
 
-                <Sidebar
-                    onLogout={handleLogout}
-                />
+                <div className="hidden md:block md:w-64 md:shrink-0">
+                    <Sidebar onLogout={handleLogout} />
+                </div>
+
+                {mobileNavOpen && (
+                    <div className="fixed inset-0 z-50 md:hidden">
+                        <button
+                            type="button"
+                            aria-label="Close navigation"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="absolute inset-0 bg-slate-950/50"
+                        />
+                        <div className="relative h-full w-[min(18rem,85vw)] shadow-2xl">
+                            <Sidebar
+                                onLogout={handleLogout}
+                                onNavigate={() => setMobileNavOpen(false)}
+                                onClose={() => setMobileNavOpen(false)}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* =========================
                     MAIN AREA
@@ -252,11 +273,11 @@ function App() {
 
                     {/* Navbar */}
 
-                    <Navbar user={user} />
+                    <Navbar user={user} onMenuClick={() => setMobileNavOpen(true)} />
 
                     {/* Page Content */}
 
-                    <main className="p-6">
+                    <main className="min-w-0 p-4 sm:p-6">
 
                         <Routes>
 
