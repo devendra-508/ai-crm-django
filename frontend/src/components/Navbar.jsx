@@ -508,7 +508,7 @@ function Navbar({ user, onMenuClick }) {
           {/* Notification Dropdown */}
 
           {showNotifications && (
-            <div className="absolute right-0 top-12 z-50 w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+            <div className="fixed right-3 top-20 z-50 w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl sm:absolute sm:right-0 sm:top-12 sm:w-96">
               {/* Header */}
 
               <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
