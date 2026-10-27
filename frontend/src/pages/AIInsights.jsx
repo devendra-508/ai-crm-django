@@ -9,11 +9,16 @@ import {
 } from "lucide-react";
 
 import api from "../api";
+import {
+    classifyAIInsightsResponse,
+    getAIInsightsErrorMessage,
+} from "../aiInsightsResponse";
 
 function AIInsights() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [empty, setEmpty] = useState(false);
 
     // =========================
     // FETCH AI INSIGHTS
@@ -23,21 +28,34 @@ function AIInsights() {
         try {
             setLoading(true);
             setError("");
+            setEmpty(false);
+            setData(null);
 
             const response = await api.get(
                 "/ai-insights/"
             );
 
+            const responseState = classifyAIInsightsResponse(response.data);
+
+            if (responseState === "invalid") {
+                setError(
+                    "The AI Insights API returned an unexpected response. Verify that the backend deployment uses the expected response schema."
+                );
+                return;
+            }
+
             setData(response.data);
+            setEmpty(responseState === "empty");
         } catch (err) {
-            console.error(
-                "AI Insights Error:",
-                err
-            );
+            console.error("AI Insights request failed", {
+                status: err.response?.status,
+            });
 
             setError(
-                err.response?.data?.error ||
-                "Failed to generate AI insights."
+                getAIInsightsErrorMessage(
+                    err.response?.status,
+                    err.response?.data?.error
+                )
             );
         } finally {
             setLoading(false);
@@ -136,10 +154,34 @@ function AIInsights() {
 
     const insights = data?.ai_insights;
 
-    if (!insights) {
+    if (empty) {
         return (
-            <div className="text-center py-10 text-slate-500">
-                No AI insights available.
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">
+                        AI Insights
+                    </h1>
+                    <p className="text-sm text-slate-500 mt-1">
+                        AI-powered analysis of your CRM data
+                    </p>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center">
+                    <p className="font-medium text-slate-700">
+                        No AI insights available.
+                    </p>
+                    <p className="mt-2 text-sm text-slate-500">
+                        The API returned an empty insights result. You can try again later.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={fetchInsights}
+                        className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+                    >
+                        <RefreshCw size={16} />
+                        Try Again
+                    </button>
+                </div>
             </div>
         );
     }

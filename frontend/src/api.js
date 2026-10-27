@@ -1,8 +1,12 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://ai-crm-django-production.up.railway.app/api",
+    baseURL: import.meta.env?.DEV
+        ? "/api"
+        : "https://ai-crm-django-production.up.railway.app/api",
 });
+
+let refreshPromise = null;
 
 // =========================
 // REQUEST INTERCEPTOR
@@ -40,8 +44,10 @@ api.interceptors.response.use(
 
         // Only handle 401 once
         if (
+            originalRequest &&
             error.response?.status === 401 &&
-            !originalRequest._retry
+            !originalRequest._retry &&
+            !originalRequest.url?.includes("/auth/refresh/")
         ) {
 
             originalRequest._retry = true;
@@ -61,37 +67,41 @@ api.interceptors.response.use(
             }
 
             try {
+                if (!refreshPromise) {
+                    refreshPromise = axios
+                        .post(
+                            api.getUri({ url: "/auth/refresh/" }),
+                            { refresh: refreshToken }
+                        )
+                        .then((response) => {
+                            const newAccessToken = response.data?.access;
 
-                // Get new access token
-                const response = await axios.post(
-                    "https://ai-crm-django-production.up.railway.app/api/auth/refresh/",
-                    {
-                        refresh: refreshToken,
-                    }
-                );
+                            if (!newAccessToken) {
+                                throw new Error("Refresh response did not include an access token.");
+                            }
 
-                const newAccessToken =
-                    response.data.access;
+                            localStorage.setItem("access_token", newAccessToken);
 
-                // Save new access token
-                localStorage.setItem(
-                    "access_token",
-                    newAccessToken
-                );
+                            if (response.data.refresh) {
+                                localStorage.setItem("refresh_token", response.data.refresh);
+                            }
 
-                // Update original request
-                originalRequest.headers.Authorization =
-                    `Bearer ${newAccessToken}`;
+                            return newAccessToken;
+                        })
+                        .finally(() => {
+                            refreshPromise = null;
+                        });
+                }
 
-                // Retry original request
+                const newAccessToken = await refreshPromise;
+
+                originalRequest.headers = originalRequest.headers || {};
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
                 return api(originalRequest);
-
             } catch (refreshError) {
-
-                console.error(
-                    "Refresh token failed:",
-                    refreshError
-                );
+                // Avoid logging Axios config, which can contain authorization data.
+                console.error("Session refresh failed.");
 
                 // Refresh token expired/invalid
                 localStorage.removeItem("access_token");
