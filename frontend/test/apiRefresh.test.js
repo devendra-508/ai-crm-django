@@ -2,7 +2,52 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import axios, { AxiosError } from "axios";
 
-import api from "../src/api.js";
+import api, {
+    getApiBaseUrl,
+    PRODUCTION_API_BASE_URL,
+} from "../src/api.js";
+
+test("uses the local Vite proxy by default during development", () => {
+    assert.equal(getApiBaseUrl({ isDev: true }), "/api");
+});
+
+test("uses an explicitly configured API base URL for staging", () => {
+    assert.equal(
+        getApiBaseUrl({
+            configuredBaseUrl: "https://crm-staging.up.railway.app/api/",
+            isDev: false,
+        }),
+        "https://crm-staging.up.railway.app/api"
+    );
+});
+
+test("preserves the production API fallback when no URL is configured", () => {
+    assert.equal(
+        getApiBaseUrl({ isDev: false }),
+        "https://ai-crm-django-production.up.railway.app/api"
+    );
+    assert.equal(
+        PRODUCTION_API_BASE_URL,
+        "https://ai-crm-django-production.up.railway.app/api"
+    );
+});
+
+test("allows an explicit API target to override the local proxy", () => {
+    assert.equal(
+        getApiBaseUrl({
+            configuredBaseUrl: "https://crm-staging.up.railway.app/api",
+            isDev: true,
+        }),
+        "https://crm-staging.up.railway.app/api"
+    );
+});
+
+test("ignores a blank API URL and uses the environment default", () => {
+    assert.equal(
+        getApiBaseUrl({ configuredBaseUrl: "  ", isDev: true }),
+        "/api"
+    );
+});
 
 function makeError(config, status = 401) {
     const response = {

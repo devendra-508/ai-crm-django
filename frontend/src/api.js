@@ -1,9 +1,21 @@
 import axios from "axios";
 
+export const PRODUCTION_API_BASE_URL =
+    "https://ai-crm-django-production.up.railway.app/api";
+
+export function getApiBaseUrl({ configuredBaseUrl, isDev }) {
+    if (typeof configuredBaseUrl === "string" && configuredBaseUrl.trim()) {
+        return configuredBaseUrl.trim().replace(/\/+$/, "");
+    }
+
+    return isDev ? "/api" : PRODUCTION_API_BASE_URL;
+}
+
 const api = axios.create({
-    baseURL: import.meta.env?.DEV
-        ? "/api"
-        : "https://ai-crm-django-production.up.railway.app/api",
+    baseURL: getApiBaseUrl({
+        configuredBaseUrl: import.meta.env?.VITE_API_BASE_URL,
+        isDev: import.meta.env?.DEV,
+    }),
 });
 
 let refreshPromise = null;
